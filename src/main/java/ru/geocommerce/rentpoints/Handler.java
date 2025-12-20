@@ -2,22 +2,19 @@ package ru.geocommerce.rentpoints;
 
 import com.microsoft.playwright.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Handler {
-    private static final string baseUrl = "https://www.avito.ru/web/1/map/markers?filters=";
-    private static final string partFiltersBeforeMaps = """
-            {"categoryId":42,"correctorMode":0,"directionId":[],"disabledFilters":{"ids":["byTitle"],"slugs":["bt"]},"districtId":[],"from":"","localPriority":0,"locationId":641780,"map":"
-            """;
-    private static final string partFiltersAfterMaps = """
-            ","metroId":[],"page":1,"params":{"110799":472643,"1209":13968,"178133":1,"536":5545},"rootCategoryId":4,
-            """;
+    private static final String baseUrl = "https://www.avito.ru/web/1/map/markers?filters=";
+    private static final String partFiltersBeforeMaps = "{\"categoryId\":42,\"correctorMode\":0,\"directionId\":[],\"disabledFilters\":{\"ids\":[\"byTitle\"],\"slugs\":[\"bt\"]},\"districtId\":[],\"from\":\"\",\"localPriority\":0,\"locationId\":641780,\"map\":\"";
+    private static final String partFiltersAfterMaps = "\",\"metroId\":[],\"page\":1,\"params\":{\"110799\":472643,\"1209\":13968,\"178133\":1,\"536\":5545},\"rootCategoryId\":4,";
 
-    private static final string partFiltersLast = """
-            ,"subscription":{"isAuthenticated":false,"isErrorSaved":false,"isShowSavedTooltip":false,"visible":true},"verticalCategoryId":1,"viewPort":{"height":432,"width":726}}
-            """;
-    private static final string endUrl = "&offsetView%5Bleft%5D=500&z=1"
+    private static final String partFiltersLast = ",\"subscription\":{\"isAuthenticated\":false,\"isErrorSaved\":false,\"isShowSavedTooltip\":false,\"visible\":true},\"verticalCategoryId\":1,\"viewPort\":{\"height\":432,\"width\":726}}";
+    private static final String endUrl = "&offsetView%5Bleft%5D=500&z=1";
 
     public static String CreateRequest(Rash.Coordinates leftTop, Rash.Coordinates rightBottom) {
         try (Playwright playwright = Playwright.create()) {
@@ -41,19 +38,34 @@ public class Handler {
             headers.put("Upgrade-Insecure-Requests", "1");
             headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 OPR/124.0.0.0");
 
-            string searchArea = """
-                    "searchArea":{"latBottom":54.123456789751346,"latTop":55.12345678975136,"lonLeft":82.12345678975136,"lonRight":83.12345678975136}
-                    """;
+            String searchArea = "\"searchArea\":{\"latBottom\":" + rightBottom.getLat() + ",\"latTop\":" + leftTop.getLat() + ",\"lonLeft\":" + leftTop.getLng() + ",\"lonRight\":" + rightBottom.getLng() + "}";
+            String map = "{" + searchArea + ",\"zoom\":11}";
+
+            System.out.println(map);
+
+            String mapBase64 = Base64.getEncoder()
+                    .encodeToString(map.getBytes(StandardCharsets.UTF_8));
+            String filters = partFiltersBeforeMaps + mapBase64 + partFiltersAfterMaps + searchArea + partFiltersLast;
+
+            System.out.println(filters);
+
+            String filtersBase64 = Base64.getEncoder()
+                    .encodeToString(filters.getBytes(StandardCharsets.UTF_8));
+            String filtersUrlEncoded = URLEncoder.encode(filtersBase64, StandardCharsets.UTF_8);
+
+            System.out.println(filtersUrlEncoded);
+
+            String url = baseUrl + filtersUrlEncoded + endUrl;
+
+
+            System.out.println(url);
 
             BrowserContext context = browser.newContext(new Browser.NewContextOptions()
                     .setExtraHTTPHeaders(headers)
             );
 
             Page page = context.newPage();
-
-
-
-            Response response = page.navigate("https://www.avito.ru/web/1/map/markers?filters=eyJjYXRlZ29yeUlkIjo0MiwiY29ycmVjdG9yTW9kZSI6MCwiZGlyZWN0aW9uSWQiOltdLCJkaXNhYmxlZEZpbHRlcnMiOnsiaWRzIjpbImJ5VGl0bGUiXSwic2x1Z3MiOlsiYnQiXX0sImRpc3RyaWN0SWQiOltdLCJmcm9tIjoiIiwibG9jYWxQcmlvcml0eSI6MCwibG9jYXRpb25JZCI6NjQxNzgwLCJtYXAiOiJleUp6WldGeVkyaEJjbVZoSWpwN0lteGhkRUp2ZEhSdmJTSTZOVFF1T0RVM09ERXhNamt5T0Rjd01USTBMQ0pzWVhSVWIzQWlPalUxTGpBeU9ERTVNekE0TkRJd09UZzRMQ0pzYjI1TVpXWjBJam80TWk0NE5qVXhNRGd4TkRFek5qVTBNU3dpYkc5dVVtbG5hSFFpT2pnekxqTTJNell4TWpjNE1EQXpOekk1ZlN3aWVtOXZiU0k2TVRGOSIsIm1ldHJvSWQiOltdLCJwYWdlIjoxLCJwYXJhbXMiOnsiMTEwNzk5Ijo0NzI2NDMsIjEyMDkiOjEzOTY4LCIxNzgxMzMiOjEsIjUzNiI6NTU0NX0sInJvb3RDYXRlZ29yeUlkIjo0LCJzZWFyY2hBcmVhIjp7ImxhdEJvdHRvbSI6NTQuODU3ODExMjkyODcwMTI0LCJsYXRUb3AiOjU1LjAyODE5MzA4NDIwOTg4LCJsb25MZWZ0Ijo4Mi44NjUxMDgxNDEzNjU0MSwibG9uUmlnaHQiOjgzLjM2MzYxMjc4MDAzNzI5fSwic3Vic2NyaXB0aW9uIjp7ImlzQXV0aGVudGljYXRlZCI6ZmFsc2UsImlzRXJyb3JTYXZlZCI6ZmFsc2UsImlzU2hvd1NhdmVkVG9vbHRpcCI6ZmFsc2UsInZpc2libGUiOnRydWV9LCJ2ZXJ0aWNhbENhdGVnb3J5SWQiOjEsInZpZXdQb3J0Ijp7ImhlaWdodCI6NDMyLCJ3aWR0aCI6NzI2fX0%3D&offsetView%5Bleft%5D=500&z=11&isMiniMap=false");
+            Response response = page.navigate(url);
 
             String html = page.content();
 
@@ -63,9 +75,5 @@ public class Handler {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static void main(String[] args) {
-        CreateRequest()
     }
 }

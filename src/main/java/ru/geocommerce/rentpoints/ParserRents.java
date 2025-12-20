@@ -24,8 +24,14 @@ public class ParserRents {
         return rashList;
     }
 
-    public static List<Rash> GetRentPoints() throws IOException {
-        String json = Handler.CreateRequest();
+    public static List<Rash> GetRentPoints(double left, double right, double top, double bottom) throws IOException {
+        Rash.Coordinates leftTop = new Rash.Coordinates();
+        Rash.Coordinates rightBottom = new Rash.Coordinates();
+        leftTop.setLat(top);
+        leftTop.setLng(left);
+        rightBottom.setLat(bottom);
+        rightBottom.setLng(right);
+        String json = Handler.CreateRequest(leftTop, rightBottom);
         return parseRashes(json);
     }
 }
