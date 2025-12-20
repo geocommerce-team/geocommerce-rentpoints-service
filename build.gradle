@@ -1,24 +1,47 @@
 plugins {
     id 'java'
-    id 'application'
+    id 'org.springframework.boot' version '3.4.0'
+    id 'io.spring.dependency-management' version '1.1.6'
 }
 
-group = 'org.example'
-version = '1.0-SNAPSHOT'
+group = 'ru.geocommerce'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    implementation "com.microsoft.playwright:playwright:1.42.0"
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.2'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.16.2'
+    // Playwright для браузерной автоматизации
+    implementation 'com.microsoft.playwright:playwright:1.49.0'
+
+    // Для логирования (уже включено в spring-boot-starter-web, но можно явно)
+    implementation 'org.slf4j:slf4j-api'
+
+    // Для тестов (опционально)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-test {
+tasks.named('test') {
     useJUnitPlatform()
+}
+
+// Автоматически скачивает бинарники Playwright при сборке
+tasks.register('installPlaywright') {
+    doLast {
+        javaexec {
+            classpath = sourceSets.main.runtimeClasspath
+            mainClass = 'com.microsoft.playwright.CLI'
+            args = ['install']
+        }
+    }
+}
+
+// Запуск приложения с гарантией, что Playwright установлен
+bootRun {
+    dependsOn installPlaywright
 }
