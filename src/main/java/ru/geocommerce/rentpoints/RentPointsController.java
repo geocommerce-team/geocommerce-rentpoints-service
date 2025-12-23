@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/rent-points")
+@RequestMapping("/geocommerce/api/rent-points")
 public class RentPointsController {
 
     private final RentPointsService rentPointsService;
