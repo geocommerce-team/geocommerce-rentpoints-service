@@ -44,9 +44,19 @@ public class AvitoClient {
             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
 
             Map<String, String> headers = new HashMap<>();
-            headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36");
-            headers.put("Accept", "application/json");
-            // остальные заголовки можно упростить
+            headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+            headers.put("Accept-Language", "ru,en-US;q=0.9,en;q=0.8,zh-CN;q=0.7,zh;q=0.6,nl;q=0.5");
+            headers.put("Cache-Control", "max-age=0");
+            headers.put("Priority", "u=0, i");
+            headers.put("Sec-CH-UA", "\"Chromium\";v=\"140\", \"Not=A?Brand\";v=\"24\", \"Opera\";v=\"124\"");
+            headers.put("Sec-CH-UA-Mobile", "?0");
+            headers.put("Sec-CH-UA-Platform", "Windows");
+            headers.put("Sec-Fetch-Dest", "document");
+            headers.put("Sec-Fetch-Mode", "navigate");
+            headers.put("Sec-Fetch-Site", "none");
+            headers.put("Sec-Fetch-User", "?1");
+            headers.put("Upgrade-Insecure-Requests", "1");
+            headers.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 OPR/124.0.0.0");
 
             BrowserContext context = browser.newContext(new Browser.NewContextOptions()
                     .setExtraHTTPHeaders(headers)
@@ -60,7 +70,7 @@ public class AvitoClient {
                 return null;
             }
 
-            String content = page.textContent("body"); // Avito возвращает чистый JSON, не HTML!
+            String content = page.textContent("body");
             browser.close();
             return content;
         } catch (Exception e) {

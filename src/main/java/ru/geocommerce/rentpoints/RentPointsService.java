@@ -27,7 +27,6 @@ public class RentPointsService {
     public List<Rash> getRentPoints(double left, double right, double top, double bottom) {
         log.info("Fetching rent points for bbox: left={}, right={}, top={}, bottom={}", left, right, top, bottom);
 
-        // Создаём координаты как в оригинале
         Rash.Coordinates leftTop = new Rash.Coordinates();
         Rash.Coordinates rightBottom = new Rash.Coordinates();
         leftTop.setLat(top);
